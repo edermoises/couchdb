@@ -11,30 +11,25 @@ esac
 done
 
 allDbs=$(curl -s http://$USER:$PASS@$IPS:$PORT/_all_dbs | jq -r '.[]')
-totalBytes=0;
 totalDbEmpty=0;
 totalDbEmptyDeleted=0;
+
 for i in $allDbs; do
+
     content="$(curl -s "http://$USER:$PASS@$IPS:$PORT/$i/_all_docs" | jq -r '.total_rows')"
-    echo $content
      if [ "$content" == 0 ]; then
-            totalDbEmpty=$(($totalDbEmpty + 1));
-            sizeDB="$(curl -s "http://$USER:$PASS@$IPS:$PORT/$i" | jq .sizes.file)"
-            compact=$(curl -s -X POST "http://$USER:$PASS@$IPS:$PORT/$i/_view_cleanup")
-            echo "$compact"
-            purge=$(curl -s -X POST "http://$USER:$PASS@$IPS:$PORT/$i/_view_cleanup")
-            echo "$purge"
+            echo "$content"
+             totalDbEmpty=$(($totalDbEmpty + 1));
             delete=$(curl -s -X DELETE "http://$USER:$PASS@$IPS:$PORT/$i")
-            succ=$(echo "$delete" | grep "\"ok\":true")
-            if [ -z "$succ" ]; then
-                echo "Banco deletado: $i"
-                totalDbEmptyDeleted=$(($totalDbEmptyDeleted + 1));
-                totalBytes=$(($totalBytes + $sizeDB));
-            fi
+            echo "Deletado: $delete"
      fi
+
+      compact=$(curl -q -s -H "Content-Type: application/json" -X POST "http://$USER:$PASS@$IPS:$PORT/$i/_compact")
+      echo "$compact"   
+      purge=$(curl -s -X POST "http://$USER:$PASS@$IPS:$PORT/$i/_view_cleanup")
+      echo "$purge"
 
 done
 
-echo "Total de bytes liberado:"
 echo "Total de banco vazio: $totalDbEmpty"
 echo "Total de banco vazio deletado: $totalDbEmpty"
