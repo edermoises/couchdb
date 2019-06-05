@@ -14,10 +14,8 @@ allDbs=$(curl -s http://$USER:$PASS@$IPS:$PORT/_all_dbs | jq -r '.[]')
 totalDbEmpty=0;
 totalDbEmptyDeleted=0;
 for i in $allDbs; do
-    content="$(curl -s "http://$USER:$PASS@$IPS:$PORT/$i/_all_docs" | jq -r '.total_rows')"
-
-    echo $content
-     if [ "$content" == 0 ]; then
+   content="$(curl -s "http://$USER:$PASS@$IPS:$PORT/$i/_all_docs" | jq -r '.total_rows')"
+    if [ "$content" == 0 ]; then
             totalDbEmpty=$(($totalDbEmpty + 1));
             delete=$(curl -s -X DELETE "http://$USER:$PASS@$IPS:$PORT/$i")
             succ=$(echo "$delete" | grep "\"ok\":true")
